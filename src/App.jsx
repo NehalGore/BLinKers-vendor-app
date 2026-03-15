@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import { testConnection } from "./shared/testConnection";
+testConnection(); // Remove after testing
 
 const CustomerApp = lazy(() => import("./customer/CustomerApp.jsx"));
 const VendorApp   = lazy(() => import("./vendor/VendorApp.jsx"));
