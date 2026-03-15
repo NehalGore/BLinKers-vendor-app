@@ -163,24 +163,7 @@ blinkers-vendor-app/
 - [ ] Customer accounts
 - [ ] Role-based routing (vendor vs customer vs rider)
 
-### 📱 Phase 3 — Rider App
-- [ ] `/rider` route
-- [ ] Active delivery screen
-- [ ] Confirm pickup / delivery buttons
-- [ ] Earnings history
 
-### 🚀 Phase 4 — Production Deploy
-- [ ] Deploy to Vercel
-- [ ] Custom domain
-- [ ] PWA — installable on Android
-
-### 🤖 Phase 5 — Intelligence
-- [ ] Nightly inventory optimisation (pg_cron)
-- [ ] Auto reorder suggestions
-- [ ] Sales forecasting
-- [ ] Slow-mover auto-delist
-
----
 
 ## 👤 Built By
 
