@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../shared/supabase";
 
+
 const CATEGORIES = ["All","Essentials","Snacks","Beverages","Dairy","Instant Food","Personal Care","Household"];
 const PRODUCTS = [
   { id:1,  name:"Amul Full Cream Milk",   unit:"500ml",         price:28,  category:"Dairy",         tag:"Best Seller",  stock:24, avgSales:42, image:"🥛" },
@@ -289,11 +290,54 @@ useEffect(() => {
   const stage=STAGES.find(s=>s.key===trackStatus);
 
   const validateAddr=()=>{ const e={}; if(addingNew&&!newAddr.area.trim()) e.area="Required"; if(addingNew&&!newAddr.landmark.trim()) e.landmark="Required"; setErrors(e); return Object.keys(e).length===0; };
-  const placeOrder=()=>{
-    const oid=genOrderId();
-    setOrder({id:oid,items:cartItems,total,address:addingNew?newAddr.area:selAddrObj?.address||"",landmark:addingNew?newAddr.landmark:selAddrObj?.landmark||"",vendor:"Shree Kirana, Station Road",placedAt:new Date()});
-    setCart({}); setStep(1); setAutoPlay(true); setTrackStatus("placed"); setTrackTS({placed:new Date()}); setScreen("tracking");
-  };
+  const placeOrder = async () => {
+  try {
+    const { data: order, error } = await supabase
+      .from("orders")
+      .insert({
+        vendor_id:     "00000000-0000-0000-0000-000000000001",
+        customer_area: addingNew ? newAddr.area : selAddrObj?.address || "",
+        landmark:      addingNew ? newAddr.landmark : selAddrObj?.landmark || "",
+        payment_mode:  selPay === "cod" ? "COD" : "Online",
+        order_status:  "placed",
+        total_amount:  total,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Save order items
+    const items = cartItems.map(item => ({
+      order_id:   order.order_id,
+      product_id: item.id,
+      quantity:   item.qty,
+      unit_price: item.price,
+    }));
+    await supabase.from("order_items").insert(items);
+
+    // Move to tracking screen
+    setOrder({
+      id:        order.order_id,
+      items:     cartItems,
+      total,
+      address:   order.customer_area,
+      landmark:  order.landmark,
+      vendor:    "Shree Kirana, Station Road",
+      placedAt:  new Date(),
+    });
+    setCart({});
+    setStep(1);
+    setAutoPlay(true);
+    setTrackStatus("placed");
+    setTrackTS({ placed: new Date() });
+    setScreen("tracking");
+
+  } catch (err) {
+    console.error("Order failed:", err);
+    alert("Could not place order. Please try again.");
+  }
+};
 
   const PAYMENTS=[
     {id:"cod",icon:"💵",name:"Cash on Delivery",sub:"Pay when delivered",badge:"Recommended"},
