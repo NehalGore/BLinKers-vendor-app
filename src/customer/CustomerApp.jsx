@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { supabase } from "../shared/supabase";
 
 const CATEGORIES = ["All","Essentials","Snacks","Beverages","Dairy","Instant Food","Personal Care","Household"];
 const PRODUCTS = [
@@ -235,7 +236,34 @@ export default function CustomerApp() {
   const timerRefs = useRef([]);
   const toastTimer = useRef(null);
 
-  useEffect(()=>{ const t=setTimeout(()=>setLoading(false),900); return ()=>clearTimeout(t); },[]);
+  const [products, setProducts] = useState([]);
+useEffect(() => {
+  async function loadProducts() {
+    const { data } = await supabase
+      .from("vendor_products")
+      .select(`price, physical_stock, fast_moving, is_listed,
+        products(product_id, product_name, category, unit, image, sku_code)`)
+      .eq("vendor_id", "00000000-0000-0000-0000-000000000001")
+      .eq("is_listed", true)
+      .order("avg_daily_sales", { ascending: false });
+
+    if (data) {
+      setProducts(data.map(vp => ({
+        id:        vp.products.product_id,
+        name:      vp.products.product_name,
+        unit:      vp.products.unit,
+        category:  vp.products.category,
+        image:     vp.products.image || "📦",
+        price:     vp.price,
+        stock:     vp.physical_stock,
+        avgSales:  vp.avg_daily_sales || 0,
+        tag:       vp.fast_moving ? "Fast Moving" : null,
+      })));
+    }
+    setLoading(false);
+  }
+  loadProducts();
+}, []);
 
   useEffect(()=>{
     if(!autoPlay) return;
